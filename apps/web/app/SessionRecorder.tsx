@@ -2,7 +2,7 @@
 import { usePathname } from "next/navigation"
 import { useEffect } from "react"
 import posthog from "posthog-js"
-import { initPostHog } from "@/lib/posthog"
+import { initPostHog, isPostHogEnabled } from "@/lib/posthog"
 
 const RECORDED_ROUTES = ["/studio", "/publish"]
 
@@ -12,6 +12,8 @@ export default function SessionRecorder() {
   useEffect(initPostHog, [])
 
   useEffect(() => {
+    if (!isPostHogEnabled) return
+
     try {
       const shouldRecord = RECORDED_ROUTES.some((route) =>
         pathname.startsWith(route),
