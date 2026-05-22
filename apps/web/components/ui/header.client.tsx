@@ -35,7 +35,7 @@ import { sidebarOpenAtom } from "@/components/features/main-page/main-layout"
 import { useTheme } from "next-themes"
 import { useAuth } from "@clerk/nextjs"
 import { userStateAtom } from "@/lib/store/user-store"
-import { useClerkSupabaseClient } from "@/lib/clerk"
+import { isSupabaseClientConfigured, useClerkSupabaseClient } from "@/lib/clerk"
 import { useQuery } from "@tanstack/react-query"
 import {
   trackAttribution,
@@ -128,12 +128,12 @@ function HeaderContent({
           user_id_param: userId,
         })
         if (error) {
-          console.error("Error fetching user state:", error)
+          console.warn("Error fetching user state:", error.message ?? error)
           return null
         }
         return data as unknown as UserStateResponse
       },
-      enabled: !!userId,
+      enabled: !!userId && isSupabaseClientConfigured,
       staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
       refetchOnWindowFocus: false, // Don't refetch on window focus
       refetchInterval: 5 * 60 * 1000,

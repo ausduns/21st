@@ -135,8 +135,8 @@ export function Logo({
         {svgLogo}
       </div>
 
-      {/* Lottie Animation */}
-      {animationData && typeof window !== "undefined" && (
+      {/* Lottie Animation — client-only after mount to match SSR markup */}
+      {isMounted && animationData && (
         <div
           className={cn(
             "w-full h-full absolute inset-0 transition-opacity duration-300",

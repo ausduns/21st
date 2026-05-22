@@ -1028,7 +1028,12 @@ export function useLatestDemos() {
 
   return useQuery({
     queryKey: ["latest-demos"] as const,
+    enabled: isSupabaseClientConfigured,
     queryFn: async () => {
+      if (!isSupabaseClientConfigured) {
+        return [] as DemoWithComponent[]
+      }
+
       const { data: filteredData, error } = await supabase.rpc(
         "get_demos_list_v2",
         {
@@ -1041,12 +1046,17 @@ export function useLatestDemos() {
       )
 
       if (error) {
-        console.error("Error fetching latest demos:", error)
-        throw error
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Skipping latest demos (Supabase RPC failed):",
+            error.message ?? error,
+          )
+        }
+        return [] as DemoWithComponent[]
       }
 
       const transformedData = (filteredData || []).map(transformDemoResult)
-      return transformedData
+      return transformedData as DemoWithComponent[]
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
