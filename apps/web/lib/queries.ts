@@ -1077,7 +1077,12 @@ export function useTagDemos(
   const supabase = useClerkSupabaseClient()
   return useQuery({
     queryKey: ["tag-filtered-demos", tagSlug, sortBy, limit] as const,
+    enabled: isSupabaseClientConfigured && !!tagSlug,
     queryFn: async () => {
+      if (!isSupabaseClientConfigured) {
+        return { data: [] as DemoWithComponent[], total_count: 0 }
+      }
+
       const { data: filteredData, error } = await supabase.rpc(
         "get_demos_list_v2",
         {
@@ -1089,7 +1094,15 @@ export function useTagDemos(
         },
       )
 
-      if (error) throw error
+      if (error) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            `Skipping tag demos for "${tagSlug}" (Supabase RPC failed):`,
+            error.message ?? error,
+          )
+        }
+        return { data: [] as DemoWithComponent[], total_count: 0 }
+      }
       const transformedData = (filteredData || []).map(transformDemoResult)
       return {
         data: transformedData,
@@ -1466,7 +1479,23 @@ export function useContestRounds() {
   const supabase = useClerkSupabaseClient()
   return useQuery({
     queryKey: ["demo-hunt-rounds"],
-    queryFn: () => getContestRounds(supabase),
+    enabled: isSupabaseClientConfigured,
+    queryFn: async () => {
+      if (!isSupabaseClientConfigured) {
+        return [] as Round[]
+      }
+      try {
+        return await getContestRounds(supabase)
+      } catch (error) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Skipping contest rounds (Supabase query failed):",
+            error instanceof Error ? error.message : error,
+          )
+        }
+        return [] as Round[]
+      }
+    },
   })
 }
 
@@ -1477,7 +1506,12 @@ export function useLeaderboardDemosForHome() {
   // First get the current active round or most recent past round
   const roundQuery = useQuery({
     queryKey: ["current-hunt-round"],
+    enabled: isSupabaseClientConfigured,
     queryFn: async () => {
+      if (!isSupabaseClientConfigured) {
+        return null
+      }
+
       const now = new Date().toISOString()
 
       // First try to get active round
@@ -1508,8 +1542,9 @@ export function useLeaderboardDemosForHome() {
   // When we have the round, fetch the submissions
   const { data, isLoading, error } = useQuery({
     queryKey: ["leaderboard-demos-home", roundQuery.data?.id, user?.id],
+    enabled: isSupabaseClientConfigured && !!roundQuery.data?.id,
     queryFn: async () => {
-      if (!roundQuery.data?.id) return []
+      if (!isSupabaseClientConfigured || !roundQuery.data?.id) return []
 
       // Get data using the same function as the leaderboard
       const data = await getHuntDemosList(supabase, roundQuery.data.id)

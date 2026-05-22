@@ -6,7 +6,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { useClerkSupabaseClient } from "@/lib/clerk"
+import { isSupabaseClientConfigured, useClerkSupabaseClient } from "@/lib/clerk"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAtom } from "jotai"
 import { sidebarHintDismissedAtom, sidebarOpenAtom } from "./main-layout"
@@ -52,7 +52,7 @@ export function FilterChips({
       if (error) throw error
       return data
     },
-    enabled: activeTab === "templates",
+    enabled: activeTab === "templates" && isSupabaseClientConfigured,
   })
   const { data: logoCategories, isLoading: isLogoCategoriesLoading } = useQuery(
     {
