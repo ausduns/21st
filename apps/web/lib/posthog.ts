@@ -1,8 +1,9 @@
+import { isConfiguredPublicEnvValue } from "@/lib/client-env"
 import posthog from "posthog-js"
 
 const posthogPublicKey = process.env.NEXT_PUBLIC_POSTHOG_PUBLIC_KEY
 
-export const isPostHogEnabled = Boolean(posthogPublicKey)
+export const isPostHogEnabled = isConfiguredPublicEnvValue(posthogPublicKey)
 
 export function initPostHog() {
   if (typeof window === "undefined" || !posthogPublicKey) return

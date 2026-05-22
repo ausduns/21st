@@ -1,6 +1,6 @@
 import { PurchaseComponentError } from "@/app/api/components/purchase/route"
 import { makeSlugFromName } from "@/components/features/publish/hooks/use-is-check-slug-available"
-import { useClerkSupabaseClient } from "@/lib/clerk"
+import { isSupabaseClientConfigured, useClerkSupabaseClient } from "@/lib/clerk"
 import { categories } from "@/lib/navigation"
 import { transformDemoResult } from "@/lib/utils/transformData"
 import {
@@ -903,7 +903,12 @@ export function useFeaturedDemos() {
 
   return useQuery({
     queryKey: ["featured-demos"] as const,
+    enabled: isSupabaseClientConfigured,
     queryFn: async () => {
+      if (!isSupabaseClientConfigured) {
+        return { data: [], ids: new Set<number>() }
+      }
+
       // Fetch liked demos for all admin users
       const likedResults = await Promise.all(
         adminUserIds.map((userId) =>
@@ -918,10 +923,12 @@ export function useFeaturedDemos() {
       let combinedLikedDemosRaw: AdminLikedDemo[] = []
       likedResults.forEach((result) => {
         if (result.error) {
-          console.error(
-            `Error fetching admin liked demos for one user:`,
-            result.error,
-          )
+          if (process.env.NODE_ENV === "development") {
+            console.warn(
+              "Skipping admin liked demos for one user (Supabase RPC failed):",
+              result.error.message ?? result.error,
+            )
+          }
         } else if (result.data) {
           combinedLikedDemosRaw = combinedLikedDemosRaw.concat(
             result.data as AdminLikedDemo[],
@@ -980,7 +987,12 @@ export function useMainDemosExcludingFeatured() {
 
   return useQuery({
     queryKey: ["popular-demos"] as const,
+    enabled: isSupabaseClientConfigured,
     queryFn: async () => {
+      if (!isSupabaseClientConfigured) {
+        return [] as DemoWithComponent[]
+      }
+
       const { data: filteredData, error } = await supabase.rpc(
         "get_demos_list_v2",
         {
@@ -993,8 +1005,13 @@ export function useMainDemosExcludingFeatured() {
       )
 
       if (error) {
-        console.error("Error fetching popular demos:", error)
-        throw error
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Skipping popular demos (Supabase RPC failed):",
+            error.message ?? error,
+          )
+        }
+        return [] as DemoWithComponent[]
       }
 
       const transformedData = (filteredData || []).map(transformDemoResult)

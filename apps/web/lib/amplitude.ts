@@ -1,27 +1,33 @@
 import * as amplitude from "@amplitude/analytics-browser"
 import { sessionReplayPlugin } from "@amplitude/plugin-session-replay-browser"
+import { isConfiguredPublicEnvValue } from "@/lib/client-env"
+
+const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY
+
+export const isAmplitudeEnabled = isConfiguredPublicEnvValue(amplitudeApiKey)
 
 export const initAmplitude = () => {
-  if (typeof window !== "undefined") {
-    if (process.env.NODE_ENV === "production") {
-      const sessionReplayTracking = sessionReplayPlugin({
-        sampleRate: 0.0001,
-      })
-      amplitude.add(sessionReplayTracking)
-    }
+  if (typeof window === "undefined" || !isAmplitudeEnabled) return
 
-    amplitude.init(process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY || "", {
-      defaultTracking: {
-        sessions: true,
-        pageViews: true,
-        formInteractions: true,
-        fileDownloads: true,
-      },
+  if (process.env.NODE_ENV === "production") {
+    const sessionReplayTracking = sessionReplayPlugin({
+      sampleRate: 0.0001,
     })
+    amplitude.add(sessionReplayTracking)
   }
+
+  amplitude.init(amplitudeApiKey!, {
+    defaultTracking: {
+      sessions: true,
+      pageViews: true,
+      formInteractions: true,
+      fileDownloads: true,
+    },
+  })
 }
 
 export const trackPageProperties = (properties: Record<string, any>) => {
+  if (!isAmplitudeEnabled) return
   amplitude.track("", { ...properties })
 }
 
@@ -48,6 +54,7 @@ export const trackEvent = (
   eventName: (typeof AMPLITUDE_EVENTS)[keyof typeof AMPLITUDE_EVENTS],
   eventProperties?: Record<string, any>,
 ) => {
+  if (!isAmplitudeEnabled) return
   amplitude.track(eventName, eventProperties)
 }
 
@@ -55,6 +62,8 @@ export const identifyUser = (
   userId: string | null | undefined,
   userProperties?: Record<string, any>,
 ) => {
+  if (!isAmplitudeEnabled) return
+
   if (userId) {
     amplitude.setUserId(userId)
     if (userProperties) {

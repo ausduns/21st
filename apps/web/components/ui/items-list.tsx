@@ -1,6 +1,6 @@
 import { Icons } from "@/components/icons"
 import { Button } from "@/components/ui/button"
-import { useClerkSupabaseClient } from "@/lib/clerk"
+import { isSupabaseClientConfigured, useClerkSupabaseClient } from "@/lib/clerk"
 import { useTagDemos } from "@/lib/queries"
 import { cn, isMac } from "@/lib/utils"
 import { transformDemoResult } from "@/lib/utils/transformData"
@@ -79,7 +79,12 @@ function useMainDemos(
 
   return useInfiniteQuery({
     queryKey: ["filtered-demos", sortBy, tagSlug, "with-admin-likes"] as const,
+    enabled: isSupabaseClientConfigured,
     queryFn: async ({ pageParam = 0 }) => {
+      if (!isSupabaseClientConfigured) {
+        return { data: [], total_count: 0 }
+      }
+
       const currentPage = Number(pageParam)
       const isFirstPage = currentPage === 0
       const isRecommendedSort = sortBy === "recommended"
@@ -106,10 +111,12 @@ function useMainDemos(
         let combinedLikedDemosRaw: AdminLikedDemo[] = []
         likedResults.forEach((result) => {
           if (result.error) {
-            console.error(
-              `Error fetching admin liked demos for one user:`,
-              result.error,
-            )
+            if (process.env.NODE_ENV === "development") {
+              console.warn(
+                "Skipping admin liked demos for one user (Supabase RPC failed):",
+                result.error.message ?? result.error,
+              )
+            }
           } else if (result.data) {
             combinedLikedDemosRaw = combinedLikedDemosRaw.concat(
               result.data as AdminLikedDemo[],
@@ -143,11 +150,13 @@ function useMainDemos(
         )
 
         if (regularResult.error) {
-          console.error(
-            "Error fetching regular recommended demos:",
-            regularResult.error,
-          )
-          throw regularResult.error
+          if (process.env.NODE_ENV === "development") {
+            console.warn(
+              "Skipping regular recommended demos (Supabase RPC failed):",
+              regularResult.error.message ?? regularResult.error,
+            )
+          }
+          return { data: uniqueLikedDemosTransformed, total_count: 0 }
         }
 
         const regularDemosRaw = regularResult.data || []

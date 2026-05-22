@@ -1,10 +1,15 @@
 "use client"
 
+import { isConfiguredPublicEnvValue } from "@/lib/client-env"
 import { Database } from "@/types/supabase"
 import { useSession } from "@clerk/nextjs"
 import { createClient, SupabaseClient } from "@supabase/supabase-js"
 import { atom, useAtom } from "jotai"
 import { useEffect } from "react"
+
+export const isSupabaseClientConfigured =
+  isConfiguredPublicEnvValue(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
+  isConfiguredPublicEnvValue(process.env.NEXT_PUBLIC_SUPABASE_KEY)
 
 export const createSupabaseClerkClient = (
   getToken?: () => Promise<string | null>,
