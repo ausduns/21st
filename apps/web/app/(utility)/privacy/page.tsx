@@ -1,3 +1,4 @@
+import type { ReactElement } from "react"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -5,7 +6,7 @@ export const metadata: Metadata = {
   description: "Privacy policy for 21st.dev",
 }
 
-export default function PrivacyPolicy() {
+export default function PrivacyPolicy(): ReactElement {
   return (
     <div className="container max-w-3xl py-6 md:py-10">
       <div className="prose dark:prose-invert max-w-none">

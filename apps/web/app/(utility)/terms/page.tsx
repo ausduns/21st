@@ -1,3 +1,4 @@
+import type { ReactElement } from "react"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -5,7 +6,7 @@ export const metadata: Metadata = {
   description: "Terms of service for 21st.dev",
 }
 
-export default function TermsOfService() {
+export default function TermsOfService(): ReactElement {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl px-6 py-12 md:py-20">

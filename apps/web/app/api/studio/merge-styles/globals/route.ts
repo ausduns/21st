@@ -1,9 +1,5 @@
-import { OpenAI } from "openai"
 import { NextResponse } from "next/server"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { getOpenAI } from "@/lib/openai-server"
 
 export async function POST(request: Request) {
   try {
@@ -59,7 +55,7 @@ Format the response as a JSON object with a 'globalCss' key containing the compl
       stylesToMerge: dependencyGlobalCss.length + 1, // +1 for default styles
     })
 
-    const completion = await openai.chat.completions.create({
+    const completion = await getOpenAI().chat.completions.create({
       messages: [
         {
           role: "system",

@@ -8,7 +8,6 @@ export const VSCodeLogo = ({ className }: { className?: string }) => (
   >
     <mask
       id="mask0"
-      style={{ maskType: "alpha" }}
       maskUnits="userSpaceOnUse"
       x="0"
       y="0"

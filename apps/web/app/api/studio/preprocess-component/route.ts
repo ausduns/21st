@@ -1,12 +1,8 @@
-import OpenAI from "openai"
 import { NextResponse } from "next/server"
 import { makeSlugFromName } from "@/components/features/publish/hooks/use-is-check-slug-available"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { defaultTailwindConfig, defaultGlobalCss } from "@/lib/defaults"
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { getOpenAI } from "@/lib/openai-server"
 
 // Mock response for testing when OpenAI API is not available
 const MOCK_RESPONSE = {
@@ -100,7 +96,7 @@ async function preprocessComponent(code: string) {
   // Try to detect component name from code before using OpenAI
   // This is a basic regex approach to find component declarations
 
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAI().chat.completions.create({
     model: "gpt-4o",
     messages: [
       {

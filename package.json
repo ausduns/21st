@@ -33,7 +33,9 @@
     "overrides": {
       "react-is": "19.1.0",
       "@smithy/types": "4.2.0",
-      "@smithy/protocol-http": "5.1.0"
+      "@smithy/protocol-http": "5.1.0",
+      "@types/react": "19.1.1",
+      "@types/react-dom": "19.1.2"
     }
   },
   "resolutions": {

@@ -2,11 +2,13 @@ import { Resend } from "resend"
 import { InviteEmail } from "./invite-template"
 import inviteList from "../../config/invite-list.json"
 
-if (!process.env.RESEND_API_KEY) {
-  throw new Error("RESEND_API_KEY environment variable is not set")
+function getResend() {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY environment variable is not set")
+  }
+  return new Resend(apiKey)
 }
-
-const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function sendInvites() {
   const results = []
@@ -17,7 +19,7 @@ export async function sendInvites() {
       const encodedEmail = Buffer.from(email).toString("base64")
       const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/magic/console?waitlist=${encodedEmail}`
 
-      const data = await resend.emails.send({
+      const data = await getResend().emails.send({
         from: "Serafim from 21st.dev <serafim@hey.21st.dev>",
         to: email,
         subject: "You're invited to join 21st.dev",

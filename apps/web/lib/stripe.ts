@@ -4,18 +4,27 @@ import Stripe from "stripe"
 
 type Plan = Database["public"]["Tables"]["plans"]["Row"]
 
-const stripeSecretKeyV1 = process.env.STRIPE_SECRET_KEY_V1
-const stripeSecretKeyV2 = process.env.STRIPE_SECRET_KEY_V2
+const stripeSecretKeyV1 =
+  process.env.STRIPE_SECRET_KEY_V1 ?? "sk_test_placeholder_for_local_dev"
+const stripeSecretKeyV2 =
+  process.env.STRIPE_SECRET_KEY_V2 ?? "sk_test_placeholder_for_local_dev"
 
-if (!stripeSecretKeyV1 || !stripeSecretKeyV2) {
-  throw new Error("Stripe secret key is not set")
+const hasStripeKeys =
+  Boolean(process.env.STRIPE_SECRET_KEY_V1) &&
+  Boolean(process.env.STRIPE_SECRET_KEY_V2)
+
+export function assertStripeConfigured() {
+  if (!hasStripeKeys) {
+    throw new Error("Stripe secret key is not set")
+  }
 }
 
 export const stripeV1 = new Stripe(stripeSecretKeyV1)
 export const stripeV2 = new Stripe(stripeSecretKeyV2)
 
 function createFallbackProxy(primary: any, fallback: any): any {
-  return new Proxy(
+  // Proxy is a standard global in Node.js and modern browsers
+  return new globalThis.Proxy(
     {},
     {
       get(_, prop) {
